@@ -1,14 +1,15 @@
 
-# FEM Pavement Models
+# Team 4
 
-We are on `Github` now! Our state-of-the-art flexible pavement models are stores, managed, tracked and updated through this repository.
+We are on `Github` now! The files we have developed for this Hackathon are stored, managed, tracked and updated through this repository.
 
 ## Authors
 
 - [@Johann-Cardenas](https://www.github.com/Johann-Cardenas)
-- [@agjayme](https://www.github.com/agjayme)
-- [@AravindRamakrishnan97](https://www.github.com/AravindRamakrishnan97)
-- [@cricaditya2210](https://www.github.com/cricaditya2210)
+- [@fsaudm](https://www.github.com/fsaudm )
+- [@itsDV77](https://www.github.com/itsDV7)
+- [@Baabak94’s](https://www.github.com/Baabak94’s)
+- [@rohitma38](https://www.github.com/rohitma38)
 
 ## Licensing
 
@@ -18,48 +19,39 @@ We are on `Github` now! Our state-of-the-art flexible pavement models are stores
 
 ## Documentation
 
-Further guidance can be found on our group Loop component. See details here: [ICT-Modeling](https://uillinoisedu.sharepoint.com/:fl:/g/contentstorage/CSP_3ee666fd-9883-4d55-89ae-ae14292a9449/EaaMW-Pk1aZFiZhmZiu7isYBNKP4lFr98DpycGd9kWK1YQ?e=knCOws&nav=cz0lMkZjb250ZW50c3RvcmFnZSUyRkNTUF8zZWU2NjZmZC05ODgzLTRkNTUtODlhZS1hZTE0MjkyYTk0NDkmZD1iIV9XYm1Qb09ZVlUySnJxNFVLU3FVU1NWQkZnTGpZMDlBdmtjbENoYmM2czBHaHk1WWFCc0pUWkNkVzl1dGwyRHkmZj0wMTVaNjYyTTVHUlJONkhaR1ZVWkNZVEdER01ZVjNYQ1dHJmM9JTJGJmZsdWlkPTEmYT1Mb29wQXBwJnA9JTQwZmx1aWR4JTJGbG9vcC1wYWdlLWNvbnRhaW5lciZ4PSU3QiUyMnclMjIlM0ElMjJUMFJUVUh4MWFXeHNhVzV2YVhObFpIVXVjMmhoY21Wd2IybHVkQzVqYjIxOFlpRmZWMkp0VUc5UFdWWlZNa3B5Y1RSVlMxTnhWVk5UVmtKR1oweHFXVEE1UVhaclkyeERhR0pqTm5Nd1IyaDVOVmxoUW5OS1ZGcERaRmM1ZFhSc01rUjVmREF4TlZvMk5qSk5NMUJHUVRkWFEwUkpSRmRLUlROWk5qWlRVa2N5TlVWUE5UUSUzRCUyMiUyQyUyMmklMjIlM0ElMjIzNTUxZjIzYi0wZjE5LTQ2ZTAtYWEzMy0xY2JiNTM0YmIzOTIlMjIlN0Q%3D)
+Further guidance can be found on the Hackathon document. See details here: [Guidelines](https://docs.google.com/document/d/1ShaXCru3eYs1rQwCA6rz6foSOhgqltSa9kRDAVZq1OQ/edit)
 
 
 ## Usage/Examples
 
-```javascript
-abaqus cae noGUI = MyCode.py
-abaqus viewer noGUI = MyCode.py
+```python
+python main.py
 ```
 
 ## Roadmap
 
-- Integrate temperature gradient block within main input generation script.
-
-- Optimize `for` loops within the source code.
-
+- Test workflow agent.
+- Develop machine learning application.
+- Train machine learning model using HPC.
 
 ## Optimizations
 
-- Load Pass Approach (LPA) has been recently added to our main 3D Flexible Pavement Model.
-- A new 2D Axisymmetric Pavement Model has been added.
+- Attempt to integrate additional worflow agents to debug and test.
+- Run the code on a larger scale to test the efficiency of the code.
+
 
 ## FAQ
 
 #### What do I need to run the codes?
 
-Abaqus CAE/Standard needs to be installed on your computer as all these codes use the ABQ Scripting Interface.
+Our demo requires running te `main.py` file. This file will read the `json` file which contains the task to be performed.
 
-#### Are these codes compatible with any ABQ version?
+#### Are these codes compatible with any Python environment?
 
-Most of the codes are compatible with ABQ2021. Newer versions of Abaqus might require little code updates as terminology slightly changes between versions.
+The code requires `Python 3.9` or higher to run. The code is compatible with any Python environment.
 
 ## Acknowledgements
 
- - [Illinois Campus Cluster](https://campuscluster.illinois.edu/)
+ - [National Center for Supercomputer Applications](https://www.ncsa.illinois.edu/)
  - [Advanced Cyberinfrastructure Coordination Ecosystem: Services & Support](https://access-ci.org/)
-
-## Contributing
-
-Contributions are always welcome!
-
-See `contributing.md` for ways to get started.
-
-Please adhere to this project's `code of conduct`.
 
