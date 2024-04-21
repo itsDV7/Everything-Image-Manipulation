@@ -1,7 +1,7 @@
 # Astronomy pipeline
 
 ## Overview
-The goal of the process is to remove residual background light from the images (it changes from one image to the next because the images were taken at different times and the scattered light from the atmosphere will depend on things like the amount of clouds, the phase of the moon and how close the telescope might be pointing to it, or how close in time to sunrise/sunset the image was taken).
+The goal of the process is to remove residual background light from the images. The process has 3 steps implemented in 3 python scripts:
 
 1. `findoff.py` is comparing the area of overlap between each image and calculating the median difference.
 2. `fitoff.py` is taking the differences among all the overlapping images (from findoff) and calculating the best offset value to add/subtract to the pixel values in each image
