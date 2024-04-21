@@ -13,9 +13,9 @@ We are on `Github` now! The files we have developed for this Hackathon are store
 
 ## Licensing
 
-[![MIT License](https://img.shields.io/badge/License-Illinois-green.svg)](https://choosealicense.com/licenses/mit/) <br>
-[![AGPL License](https://img.shields.io/badge/license-ICT-blue.svg)](http://www.gnu.org/licenses/agpl-3.0) <br>
-[![GPLv3 License](https://img.shields.io/badge/License-Modeling%20v3-yellow.svg)](https://opensource.org/licenses/)
+[![MIT License](https://img.shields.io/badge/License-Illinois-red.svg)](https://choosealicense.com/licenses/mit/) <br>
+[![AGPL License](https://img.shields.io/badge/License-NCSA-blue.svg)](http://www.gnu.org/licenses/agpl-3.0) <br>
+[![GPLv3 License](https://img.shields.io/badge/License-Delta-yellow.svg)](https://opensource.org/licenses/)
 
 ## Documentation
 
