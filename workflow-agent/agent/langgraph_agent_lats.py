@@ -32,7 +32,8 @@ from utils.tools import get_tools
 class Node:
     """
     Represents a node in the search tree. Each node contains messages, a reflection on those messages, and links to parent and child nodes.
-    Nodes are used to track the state of the search, including the depth of the search, whether a solution has been found, and the score of the solution.
+    Nodes are used to track the state of the search, including the depth of the search, whether a solution has been found, and the score of
+    the solution.
     """
 
     def __init__(
@@ -164,7 +165,8 @@ class Node:
 
 class Reflection(BaseModel):
     """
-    Encapsulates the reflection and scoring of a response. This includes a textual critique, a numerical score, and a flag indicating if the solution was found.
+    Encapsulates the reflection and scoring of a response. This includes a textual critique, a numerical score, and a flag indicating 
+    if the solution was found.
     """
 
     reflections: str = Field(
@@ -217,7 +219,8 @@ def get_llm():
 
 class WorkflowAgent:
     """
-    Manages the workflow of generating and evaluating responses to user queries. This includes initializing the language model, setting up the search tree, and executing the search algorithm to find the best response.
+    Manages the workflow of generating and evaluating responses to user queries. This includes initializing the language model, 
+    setting up the search tree, and executing the search algorithm to find the best response.
     """
 
     def __init__(self, langsmith_run_id):
@@ -234,7 +237,7 @@ class WorkflowAgent:
             [
                 (
                     "system",
-                    "You are a world-class programmer and AI assistant capable of executing any goal related to software development, genAI, LLMs, and full-stack technologies. Reflect and grade the assistant response to the user question below.",
+                    "You are a world-class programmer and AI assistant capable of executing any goal related to software development, genAI, LLMs, and full-stack technologies. You excel at creating workflow agents. Reflect and grade the assistant response to the user question below.",
                 ),
                 ("user", "{input}"),
                 MessagesPlaceholder(variable_name="candidate"),
@@ -256,11 +259,10 @@ class WorkflowAgent:
                         """You are a world-class programmer and AI assistant capable of executing any goal related to software development, genAI, LLMs, and full-stack technologies.
 
 First, write a step-by-step plan for the task. The plan should be descriptive and well-explained. 
-
+You excel at creating efficient, robust and functional workflow agents
 The main objective is to plan and execute the workflow efficiently. Break down the execution into small, informed steps rather than attempting everything in one go.
-
-You have access to a variety of tools, including browser, github_tools for interacting with GitHub, and multiple vectorstore instances. Utilize the browser for internet searches and github_tools for all interactions with GitHub repositories. For code execution, rely onand shell tools available in the Docker environment to create and execute/test files.
-
+You have access to a variety of tools, including browser, github_tools for interacting with GitHub, and multiple vectorstore instances. 
+Utilize the browser for internet searches and github_tools for all interactions with GitHub repositories. For code execution, rely onand shell tools available in the Docker environment to create and execute/test files.
 Use shell and file management tools to always execute the code and iterate on the plan based on the output.""",
                     ),
                     ("user", "{input}"),
@@ -276,7 +278,7 @@ Use shell and file management tools to always execute the code and iterate on th
         self.expansion_chain = (
             ChatPromptTemplate.from_messages(
                 [
-                    ("system", "You are an AI assistant."),
+                    ("system", "You are a world-class programmer and AI assistant capable of executing any goal related to software development, genAI, LLMs, and full-stack technologies."),
                     ("user", "{input}"),
                     MessagesPlaceholder(variable_name="messages", optional=True),
                 ]
@@ -287,15 +289,23 @@ Use shell and file management tools to always execute the code and iterate on th
         self.graph = self.create_graph()
 
     def generate_candidates(self, messages: ChatPromptValue, config: RunnableConfig):
-        n = config["configurable"].get("N", 5)
+        # Reduce the number of generations to improve performance
+        n = config["configurable"].get("N", 3) 
         bound_kwargs = self.llm.bind_tools(tools=self.tools).kwargs
-        chat_result = self.llm.generate(
-            [messages.to_messages()],
-            n=n,
-            callbacks=config["callbacks"],
-            run_name="GenerateCandidates",
-            **bound_kwargs,
-        )
+        
+        # Incorporate try-except to handel potential errors
+        try:
+            chat_result = self.llm.generate(
+                [messages.to_messages()],
+                n=n,
+                callbacks=config["callbacks"],
+                run_name="GenerateCandidates",
+                **bound_kwargs,
+            )
+        except Exception as e:
+            logging.error(f"Error generating candidates: {e}")
+            return []
+        
         return [gen.message for gen in chat_result.generations[0]]
 
     def create_graph(self):
@@ -304,10 +314,16 @@ Use shell and file management tools to always execute the code and iterate on th
         @as_runnable
         def reflection_chain(inputs) -> Reflection:
             logging.info(f"Reflection inputs in reflection chain: {inputs}")
-            tool_choices = self.reflection_llm_chain.invoke(inputs)
-            reflection = tool_choices[0]
-            if not isinstance(inputs["candidate"][-1], AIMessage):
-              reflection.found_solution = False
+            
+            # try-except block to handle potential errors
+            try:
+                tool_choices = self.reflection_llm_chain.invoke(inputs)
+                reflection = tool_choices[0]
+                if not isinstance(inputs["candidate"][-1], AIMessage):
+                    reflection.found_solution = False
+            except Exception as e:
+                logging.error(f"Error in reflection chain: {e}")
+                raise
             return reflection
 
         def generate_initial_response(state: TreeState) -> dict:
@@ -406,9 +422,19 @@ Use shell and file management tools to always execute the code and iterate on th
         :return: The best response message after evaluating various candidates.
         """
         state = TreeState(input=question)
-        for step in self.graph.stream(state):
-            step_name, step_state = next(iter(step.items()))
-            print(f"Step Name: {step_name}, Step State: {step_state}")
+        
+        # Incorporate try-except block to handle potential errors
+        try:
+            for step in self.graph.stream(state):
+                step_name, step_state = next(iter(step.items()))
+                print(f"Step Name: {step_name}, Step State: {step_state}")
+                 
+        except Exception as e:
+            logging.error(f"Error during search: {e}")
+            raise
+        
         solution_node = step["__end__"]["root"].get_best_solution()
         best_trajectory = solution_node.get_trajectory(include_reflections=False)
         return best_trajectory[-1]
+    
+   

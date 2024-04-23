@@ -1,6 +1,6 @@
 {
-    "title": "Calculate Mean of Numbers",
-    "body": "Create a function to calculate the mean of an array of numbers. The function should take an array of numbers as input and return the mean of those numbers.",
+    "title": "Create a batch file containing instruction to run a job in a supercomputer",
+    "body": "Write a batch file script (.sb) to submit a job to a Linux-based supercomputer. Don't run the script or any command in the shell, just create the batch file. No validation is needed.",
     "labels": ["enhancement"],
     "assignees": ["johann.cardenas"],
     "milestone": null,
@@ -13,7 +13,7 @@
     "comments": [
       {
         "user": "johann.cardenas",
-        "message": "Remember to handle empty arrays by returning 0 or null."
+        "message": "Remember to use proper syntax and spacing when generating code. The document should be created in the local directory."
       }
     ]
   }

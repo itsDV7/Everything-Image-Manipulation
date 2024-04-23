@@ -6,10 +6,10 @@ import langchain
 from dotenv import load_dotenv
 from langchain.agents import load_tools
 from langchain.agents.agent_toolkits.github.toolkit import GitHubToolkit
+from langchain_community.tools import VectorStoreQATool
 from langchain_community.tools import ShellTool
 from langchain.agents.agent_toolkits.file_management.toolkit import FileManagementToolkit
 from langchain_openai import ChatOpenAI, AzureChatOpenAI
-from langchain_community.tools import VectorStoreQATool
 from langchain.tools import (BaseTool, StructuredTool)
 from langchain.agents.agent_toolkits.playwright.toolkit import PlayWrightBrowserToolkit
 from langchain_community.tools.playwright.utils import (
@@ -21,6 +21,7 @@ from langchain_community.utilities.github import GitHubAPIWrapper
 from utils.vector_db import get_vectorstore_retriever_tool
 
 load_dotenv(override=True, dotenv_path='../../.env')
+
 # This import is required only for jupyter notebooks, since they have their own eventloop
 # import nest_asyncio
 
@@ -68,13 +69,20 @@ def get_tools(langsmith_run_id: str, sync=True):
   else:
     llm = ChatOpenAI(temperature=0.1, model="gpt-4-0613", max_retries=3, request_timeout=60 * 3)  # type: ignore
   human_tools = load_tools(["human"], llm=llm, input_func=get_human_input)
+  
+  
   # GOOGLE SEARCH
   search = load_tools(["serpapi"])
 
-  # # GITHUB
-  # github = GitHubAPIWrapper()  # type: ignore
-  # toolkit = GitHubToolkit.from_github_api_wrapper(github)
-  # github_tools: list[BaseTool] = toolkit.get_tools()
+# GITHUB
+# github_tools = []
+# try:
+#     github = GitHubAPIWrapper(github_repository="https://github.com/Johann-Cardenas/Need-for-Compute", github_app_id="YOUR_APP_ID_HERE")
+#     toolkit = GitHubToolkit.from_github_api_wrapper(github)
+#     github_tools = toolkit.get_tools(repository="https://github.com/Johann-Cardenas/Need-for-Compute")
+# except Exception as e:
+#     print(f"Error initializing GitHub tools: {str(e)}")
+
 
   # TODO: more vector stores per Bio package: trimmomatic, gffread, samtools, salmon, DESeq2 and ggpubr
   docs_tools: List[VectorStoreQATool] = [
@@ -82,25 +90,44 @@ def get_tools(langsmith_run_id: str, sync=True):
           course_name='langchain-docs',
           name='Langchain-docs',
           description=
-          "Build context-aware, reasoning applications with LangChain's flexible abstractions and AI-first toolkit."),
+          "Build context-aware, reasoning applications with LangChain's flexible abstractions and AI-first toolkit."
+          ),
+      
       get_vectorstore_retriever_tool(
           course_name='ml4bio-star',
           name='STAR-docs',
           description=
           'Basic STAR workflow consists of 2 steps: (1) Generating genome indexes files and (2) Mapping reads to the genome'
-      ),
+          ),
+      
       get_vectorstore_retriever_tool(
           course_name='ml4bio-fastqc',
           name='FastQC-docs',
           description=
           'FastQC aims to provide a simple way to do some quality control checks on raw sequence data coming from high throughput sequencing pipelines. It provides a modular set of analyses which you can use to give a quick impression of whether your data has any problems of which you should be aware before doing any further analysis. It works with data from BAM, SAM or FastQ files'
-      ),
+          ),
+      
       get_vectorstore_retriever_tool(
           course_name='ml4bio-multiqc',
           name='MultiQC-docs',
           description=
           "MultiQC is a reporting tool that parses results and statistics from bioinformatics tool outputs, such as log files and console outputs. It helps to summarize experiments containing multiple samples and multiple analysis steps. It's designed to be placed at the end of pipelines or to be run manually when you've finished running your tools."
-      ),
+          ),
+    
+     get_vectorstore_retriever_tool(
+          course_name='ansible',
+          name='Ansible',
+          description=
+          "Using all of Ansible's documentation, this bot will write excellent Ansible scripts. Just ask it to program whatever you'd like."
+          ),
+     
+      #   get_vectorstore_retriever_tool(
+      #     course_name='team-4',
+      #     name='Team-4',
+      #     description=
+      #     "Team-4 is a project that contains a calculator functions for basic math (mean, median, factorial). It also contains a batch file template to create an .sb file for supercomputer job submission."
+      # ),
+      
       get_vectorstore_retriever_tool(
           course_name='ml4bio-bioconductor',
           name='Bioconductor-docs',
@@ -113,23 +140,23 @@ def get_tools(langsmith_run_id: str, sync=True):
   # Probably unnecessary: WikipediaQueryRun, WolframAlphaQueryRun, PubmedQueryRun, ArxivQueryRun
   # arxiv_tool = ArxivQueryRun()
 
-  tools: list[BaseTool] =  search + docs_tools + [shell] + browser_tools + file_management + human_tools # + github_tools
+  tools: list[BaseTool] =  search + docs_tools + [shell] + browser_tools + file_management + human_tools #+ github_tools
   return tools
 
 
 ############# HELPERS ################
-# def _should_check(serialized_obj: dict) -> bool:
-#   # Only require approval on ShellTool.
-#   return serialized_obj.get("name") == "terminal"
+def _should_check(serialized_obj: dict) -> bool:
+  # Only require approval on ShellTool.
+  return serialized_obj.get("name") == "terminal"
 
-# def _approve(_input: str) -> bool:
-#   if _input == "echo 'Hello World'":
-#     return True
-#   msg = ("Do you approve of the following input? "
-#          "Anything except 'Y'/'Yes' (case-insensitive) will be treated as a no.")
-#   msg += "\n\n" + _input + "\n"
-#   resp = input(msg)
-#   return resp.lower() in ("yes", "y")
+def _approve(_input: str) -> bool:
+  if _input == "echo 'Hello World'":
+    return True
+  msg = ("Do you approve of the following input? "
+         "Anything except 'Y'/'Yes' (case-insensitive) will be treated as a no.")
+  msg += "\n\n" + _input + "\n"
+  resp = input(msg)
+  return resp.lower() in ("yes", "y")
 
 
 def get_human_input() -> str:

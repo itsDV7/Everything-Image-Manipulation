@@ -21,7 +21,7 @@ VERBOSE = True
 def get_vectorstore_retriever_tool(course_name: str,
                                    name: str,
                                    description: str,
-                                   openai_model_name='gpt-3.5-turbo-16k',
+                                   openai_model_name='gpt-4-1106-Preview',
                                    temperature=0.1,
                                    top_k=8) -> VectorStoreQATool:
   r"""
