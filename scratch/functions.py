@@ -178,10 +178,89 @@ def image_segmentation(image_path):
     # cv2.waitKey(0)
     # cv2.destroyAllWindows()
 
+def diffusion(image_path):
+    from open_generative_fill import config
+    from open_generative_fill.lm_models import run_lm_model
+    from open_generative_fill.load_data import load_image
+    from open_generative_fill.vision_models import (
+        run_caption_model,
+        run_inpainting_pipeline,
+        run_segmentaiton_pipeline,
+    )
+    from random import randint
+
+    device = "cuda" if torch.cuda.is_available() else "cpu"
+
+    # Load the specified image
+    image = Image.open(image_path)
+
+    edit_prompt = "make me a cartoon"
+
+    # Image captioning
+    caption = run_caption_model(
+        model_id=config.CAPTION_MODEL_ID, image=image, device=device
+    )
+
+    # Language model
+    to_replace, replaced_caption = run_lm_model(
+        model_id=config.LANGUAGE_MODEL_ID,
+        caption=caption,
+        edit_prompt=edit_prompt,
+        device=device,
+    )
+
+    # Segmentation pipeline
+    segmentation_mask = run_segmentaiton_pipeline(
+        detection_model_id=config.DETECTION_MODEL_ID,
+        segmentation_model_id=config.SEGMENTATION_MODEL_ID,
+        to_replace=to_replace,
+        image=image,
+        device=device,
+    )
+
+    # Inpainting pipeline
+    output = run_inpainting_pipeline(
+        inpainting_model_id=config.INPAINTING_MODEL_ID,
+        image=image,
+        mask=segmentation_mask,
+        replaced_caption=replaced_caption,
+        image_size=config.IMAGE_SIZE,
+        generator=torch.Generator().manual_seed(randint(1, 100)),
+        device=device,
+    )
+
+    # print(output)
+    try:
+        print("Saved?")
+        output.save("diffused.jpg")
+    except Exception (e):
+        print("No save", e)
+    finally:
+        print("Got to end.")
+
+def cropper(image_path):
+    image = Image.open(image_path)
+
+    # Extract bounding box coordinates
+    x1, y1, x2, y2 = [273, 97, 517, 495]
+
+    # Crop the image
+    cropped_image = image.crop((x1, y1, x2, y2))
+
+    # Save the cropped image
+    cropped_image.save('img_cropper.jpg')
+
+    print(f"Cropped image saved at img_cropper.jpg")
+
+
+# Post-process the output
+# Convert the output tensor back to an image format and save or display it
 
 
 
 # print(generate_image_caption("dogs_playing.jpg"))
 # print(detect_objects("dogs_playing.jpg"))
 # print(image_question_answer("dogs_playing.jpg", "Which dog has the ball?"))
-image_segmentation("human.jpg")
+# print(image_segmentation("human.jpg, True"))
+print(diffusion("cropped_image.jpg"))
+# print(cropper("dogs_playing.jpg"))

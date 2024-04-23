@@ -4,6 +4,15 @@ from transformers import BlipProcessor, BlipForConditionalGeneration, AutoImageP
 from datasets import load_dataset
 import numpy as np
 import torch
+# Diffusion
+from open_generative_fill import config
+from open_generative_fill.lm_models import run_lm_model
+from open_generative_fill.load_data import load_image
+from open_generative_fill.vision_models import (
+    run_caption_model,
+    run_inpainting_pipeline,
+    run_segmentaiton_pipeline,
+)
 
 class ImageCaptioningTool(BaseTool):
     name = "Image Captioning Tool / Image Captioner"
@@ -151,3 +160,45 @@ class HumanImageSegmentationTool(BaseTool):
         if save:
             masked_image_pil.save("cropped_image.jpg")
             return "cropped_image.jpg is the path of the new cropped image."
+        else:
+            pass
+
+        def _arun(self, query: str):
+            raise NotImplementedError("This tool does not support async")
+
+class ObjectCroppingTool(BaseTool):
+    name = "Image Object Cropper Tool / Image Object Extracter Tool"
+    description = """Use this tool when a path to an image is given and you have the bounding boxes of the objects in the image and you are asked to extract or crop out a specific object from the image.
+    If user had specified more than one object to crop out of the image, use this tool again and again to crop out all objects one by one.
+    The tool requires the input to be in this order: image_path,(x1:y1:x2:y2)
+    This tool can be used to crop out human objects but only if the user has specifically specified to crop out a human bounding box or crop out a human object and some area around them. Otherwise, ONLY USE Human Image Segmentation Tool.
+    This tool will return as string the location of the cropped image each time it is done processing and saved."""
+
+    def _run(self, img_bbox):
+        img_path, bbox = img_bbox.strip("()").split(",")
+
+        image = Image.open(img_path)
+
+        # Extract bounding box coordinates
+        x1, y1, x2, y2 = bbox.strip("()").split(":")
+
+        # Crop the image
+        cropped_image = image.crop((x1, y1, x2, y2))
+
+        # Save the cropped image
+        save_path = f'Obj_{img_path.split("/")[-1]}_cropped.jpg'
+        cropped_image.save(save_path)
+
+        return f"Cropped image saved at {save_path}""
+
+    def _arun(self, query: str):
+        raise NotImplementedError("This tool does not support async")
+
+class ImageDiffusionTool(BaseTool):
+    name = "Image Diffusion Tool / Image Modifier Tool / Generative Image Tool"
+    description = """Use this tool when a path to an image is given and you are asked to change some object inside of an image to something else, or when you are asked to change the style of the image like watercolor, cartoon, etc.
+    This is a diffusion tool and is only used for related tasks. This tool is STRICTLY not used to crop, segment, or modify any meta-data of the provided image.
+    The output of this image will be another image and the tool will return a string containing the location of saved image.
+    After using this tool, try to use Image Captioning Tool to look at the results of this tool and determine if they satisfy the user needs. If not, try to run this tool again on the original task."""
+
+    def _run(self, img_path):

@@ -1,3 +1,8 @@
+import warnings
+# Disable all warnings
+warnings.filterwarnings("ignore")
+
+
 import streamlit as st
 from tempfile import NamedTemporaryFile
 
@@ -45,7 +50,7 @@ llm = model
 agent = create_react_agent(llm, tools, prompt)
 
 # Create an agent executor by passing in the agent and tools
-agent_executor = AgentExecutor(agent=agent, tools=tools, verbose=True)
+agent_executor = AgentExecutor(agent=agent, tools=tools, verbose=True, handle_parsing_errors=True)
 
 from langchain.memory import ChatMessageHistory
 memory = ChatMessageHistory(session_id='curr_session')
@@ -60,7 +65,7 @@ memory_agent = RunnableWithMessageHistory(
 
 st.title("Everything Images!")
 st.header("Please upload an image.")
-file = st.file_uploader("", type=['jpeg', 'jpg', 'png'])
+file = st.file_uploader("Upload here.", type=['jpeg', 'jpg', 'png'])
 
 if file:
     ext = file.name.split('.')[-1]
@@ -84,6 +89,7 @@ if file:
                 })
 
                 st.write(response['output'])
+
 
 # print(agent_executor.invoke({"input": f'{message}'}))
 # print(memory_agent.invoke({"input": f'{message}'}, config={"configurable": {"session_id": "<foo>"}}))
