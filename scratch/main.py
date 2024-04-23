@@ -34,9 +34,9 @@ from langchain_openai import OpenAI
 
 os.environ['TAVILY_API_KEY'] = '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'
 
-from tools import ImageCaptioningTool, ObjectDetectionTool, ImageQuestionAnswerTool, HumanImageSegmentationTool
+from tools import ImageCaptioningTool, ObjectDetectionTool, ImageQuestionAnswerTool, HumanImageSegmentationTool, ObjectCroppingTool, ImageDiffusionTool
 
-tools = [ImageCaptioningTool(), ObjectDetectionTool(), ImageQuestionAnswerTool(), HumanImageSegmentationTool(), TavilySearchResults(max_results=1)]
+tools = [ImageCaptioningTool(), ObjectDetectionTool(), ImageQuestionAnswerTool(), HumanImageSegmentationTool(), ObjectCroppingTool(), ImageDiffusionTool(), TavilySearchResults(max_results=1)]
 
 # tools = [TavilySearchResults(max_results=1)]
 
@@ -90,6 +90,19 @@ if file:
 
                 st.write(response['output'])
 
+                if "cropped_img.jpg" in response['output']:
+                    st.image("cropped_img.jpg", use_column_width=True)
+                elif f"Obj_{image_path.split('/')[-1]}_cropped.jpg" in response['output']:
+                    st.image(f"Obj_{image_path.split('/')[-1]}_cropped.jpg", use_column_width=True)
+                elif "diffused.jpg" in response['output']:
+                    st.image("diffused.jpg", use_column_width=True)
+                else:
+                    directory = os.getcwd()
+                    for root, dirs, files in os.walk(directory):
+                        for file in files:
+                            if file.endswith('.tempjpg'):
+                                full_path = os.path.join(root, file)
+                                st.image(full_path, use_column_width=True)
 
 # print(agent_executor.invoke({"input": f'{message}'}))
 # print(memory_agent.invoke({"input": f'{message}'}, config={"configurable": {"session_id": "<foo>"}}))
