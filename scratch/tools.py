@@ -188,7 +188,7 @@ class ObjectCroppingTool(BaseTool):
     description = """Use this tool when a path to an image is given and you are asked to extract or crop out a specific object from the image.
     To use this tool, get the bounding boxes of the object that needs to be cropped. This tool should majorly be used for non-human object segmentation, cropping, extraction, etc.
     If user had specified more than one object to crop out of the image, use this tool again and again to crop out all objects one by one.
-    The tool requires the input to be in this order: image_path,(value1:value2:value3:value4)
+    The tool requires the input to be in this order: image_path,(value1:value2:value3:value4) where values come from the [value1, value2, value3, value4] of the selected bounding box.
     This tool can be used to crop out human objects but only if the user has specifically specified to crop out a human bounding box or crop out a human object and some area around them. Otherwise, ONLY USE Human Image Segmentation Tool.
     This tool will return as string the location of the cropped image each time it is done processing and saved."""
 
@@ -201,7 +201,7 @@ class ObjectCroppingTool(BaseTool):
         image = Image.open(img_path)
 
         # Extract bounding box coordinates
-        x1, x2, y1, y2 = bbox.strip("()").split(":")
+        x1, y1, x2, y2 = list(map(int, bbox.strip("()").split(":")))
 
         # Crop the image
         cropped_image = image.crop((x1, y1, x2, y2))

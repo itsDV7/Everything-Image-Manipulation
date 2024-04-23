@@ -262,5 +262,5 @@ def cropper(image_path):
 # print(detect_objects("dogs_playing.jpg"))
 # print(image_question_answer("dogs_playing.jpg", "Which dog has the ball?"))
 # print(image_segmentation("human.jpg, True"))
-print(diffusion("newimg.jpg"))
-# print(cropper("dogs_playing.jpg"))
+# print(diffusion("newimg.jpg"))
+print(cropper("dogs_playing.jpg"))
