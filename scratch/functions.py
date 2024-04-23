@@ -54,6 +54,134 @@ def image_question_answer(image_path, question):
     return answer
 
 
-print(generate_image_caption("dogs_playing.jpg"))
-print(detect_objects("dogs_playing.jpg"))
-print(image_question_answer("dogs_playing.jpg", "Which dog has the ball?"))
+def image_segmentation(image_path):
+    # import torch
+    from datasets import load_dataset
+    # from transformers import SegGptImageProcessor, SegGptForImageSegmentation
+    #
+    # model_id = "BAAI/seggpt-vit-large"
+    # image_processor = SegGptImageProcessor.from_pretrained(model_id)
+    # model = SegGptForImageSegmentation.from_pretrained(model_id)
+    #
+    # dataset_id = "mattmdjaga/human_parsing_dataset"
+    # ds = load_dataset(dataset_id, split="train")
+    #
+    # num_labels = 18
+    #
+    # image_input = ds[4]["image"]
+    # ground_truth = ds[4]["mask"]
+    # image_prompt = ds[29]["image"]
+    # mask_prompt = ds[29]["mask"]
+    #
+    # inputs = image_processor(
+    #     images=image_input,
+    #     prompt_images=image_prompt,
+    #     prompt_masks=mask_prompt,
+    #     num_labels=num_labels,
+    #     return_tensors="pt"
+    # )
+    #
+    # with torch.no_grad():
+    #     outputs = model(**inputs)
+    #
+    # target_sizes = [image_input.size[::-1]]
+    # mask = image_processor.post_process_semantic_segmentation(outputs, target_sizes, num_labels=num_labels)[0]
+
+    import torch
+    from PIL import Image
+    from transformers import SegGptImageProcessor, SegGptForImageSegmentation
+
+    # Initialize SegGPT model and image processor
+    model_id = "BAAI/seggpt-vit-large"
+    image_processor = SegGptImageProcessor.from_pretrained(model_id)
+    model = SegGptForImageSegmentation.from_pretrained(model_id)
+
+    # Load the specified image
+    image_input = Image.open(image_path)
+
+    # Load the dataset for semantic segmentation (assuming it's the same as before)
+    dataset_id = "mattmdjaga/human_parsing_dataset"
+    ds = load_dataset(dataset_id, split="train")
+
+    # Number of labels for the dataset
+    num_labels = 18
+
+    # Assuming you want to use the first image and mask prompts from the dataset
+    image_prompt = ds[0]["image"]
+    mask_prompt = ds[0]["mask"]
+
+    # Process the image and prompts
+    inputs = image_processor(
+        images=image_input,
+        prompt_images=image_prompt,
+        prompt_masks=mask_prompt,
+        num_labels=num_labels,
+        return_tensors="pt"
+    )
+
+    # Perform segmentation
+    with torch.no_grad():
+        outputs = model(**inputs)
+
+    # Post-process segmentation to get the mask
+    target_sizes = [image_input.size[::-1]]
+    mask = image_processor.post_process_semantic_segmentation(outputs, target_sizes, num_labels=num_labels)[0]
+
+
+    from PIL import Image
+    import numpy as np
+
+    # Convert mask to numpy array
+    mask_array = mask.cpu().numpy()
+
+    # Apply the mask to the original image
+    image_np = np.array(image_input)
+    masked_image_np = np.copy(image_np)
+
+    # Set non-masked pixels to black
+    masked_image_np[mask_array == 0] = 0
+
+    # Convert numpy array back to PIL image
+    masked_image_pil = Image.fromarray(masked_image_np)
+
+    # Save or display the masked image
+    # masked_image_pil.show()
+    masked_image_pil.save("masked_image.jpg")  # Save the masked image to a file if needed
+
+    # Now you can display the segmented mask overlaying the original image as before
+    # from PIL import Image
+    # import cv2
+    # import numpy as np
+    # import torch
+    #
+    # # Load the image
+    # # image_input = Image.open("dogs_playing.jpg")
+    #
+    # # Convert PIL image to NumPy array
+    # image_np = np.array(image_input)
+    #
+    # # Convert NumPy array to PyTorch tensor and permute dimensions
+    # image_tensor = torch.tensor(image_np).permute(2, 0, 1)
+    #
+    # # Convert mask to numpy array
+    # mask_array = mask.cpu().numpy()
+    #
+    # # Convert mask to 3-channel image
+    # mask_image = np.zeros_like(image_np)
+    # mask_image[:, :, 0] = mask_array * 255
+    #
+    # # Add mask overlay to original image
+    # overlay = cv2.addWeighted(image_np, 1, mask_image.astype(np.uint8), 0.5, 0)
+    #
+    # # Display the image with mask overlay
+    # cv2.imshow('Mask Overlay', overlay)
+    # cv2.waitKey(0)
+    # cv2.destroyAllWindows()
+
+
+
+
+# print(generate_image_caption("dogs_playing.jpg"))
+# print(detect_objects("dogs_playing.jpg"))
+# print(image_question_answer("dogs_playing.jpg", "Which dog has the ball?"))
+image_segmentation("human.jpg")

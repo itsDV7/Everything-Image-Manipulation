@@ -1,13 +1,16 @@
 from langchain.tools import BaseTool
 from PIL import Image
-from transformers import BlipProcessor, BlipForConditionalGeneration, AutoImageProcessor, DetrForObjectDetection, BlipForQuestionAnswering
+from transformers import BlipProcessor, BlipForConditionalGeneration, AutoImageProcessor, DetrImageProcessor, DetrForObjectDetection, BlipForQuestionAnswering, SegGptImageProcessor, SegGptForImageSegmentation
+from datasets import load_dataset
+import numpy as np
 import torch
 
 class ImageCaptioningTool(BaseTool):
     name = "Image Captioning Tool / Image Captioner"
     description = """Use this tool when a path to an image is given and you are asked to describe the image.
     This tool will return a caption about the image in string format.
-    The tool should only be used to provide a general description about the image and not to answer any specific questions with context of the image."""
+    The tool should only be used to provide a general description about the image and not to answer any specific questions with context of the image.
+    If and only if there is ambiguity or uncertainty in the answer provided by the Image Question Answer Tool after using that tool use this to try and remove ambiguity."""
 
     def _run(self, img_path):
         image = Image.open(img_path).convert('RGB')
@@ -60,12 +63,15 @@ class ObjectDetectionTool(BaseTool):
         raise NotImplementedError("This tool does not support async")
 
 class ImageQuestionAnswerTool(BaseTool):
-    name = "Image question answering tool"
+    name = "Image Question Answering Tool"
     description = """Use this tool when a path to an image is given and you are asked about any contextual information about the image.
+    This tool takes TWO arguments in the order: image_path, question. Always follow this order when calling the tool.
     This tool will return an answer string according to the question asked by the user, keeping in mind the context provided by the image.
     This tool MUST NOT be used to provide a general description about the image."""
 
-    def _run(self, img_path):
+    def _run(self, img_ques):
+        img_path, question = img_ques.strip().split(",")
+
         image = Image.open(img_path).convert('RGB')
 
         processor = BlipProcessor.from_pretrained("Salesforce/blip-vqa-capfilt-large")
@@ -77,6 +83,71 @@ class ImageQuestionAnswerTool(BaseTool):
         answer = processor.decode(out[0], skip_special_tokens=True)
 
         return answer
-        
+
     def _arun(self, query: str):
         raise NotImplementedError("This tool does not support async")
+
+class HumanImageSegmentationTool(BaseTool):
+    name = "Human Segmentation Tool / Human Image Cropping Tool"
+    description = """Use this tool when a path to an image is given and you are asked to extract the part of the image which contains a human figure.
+    This tool should be used to segment the area of the image containing humans and MUST NOT BE USED FOR ANY OTHER OBJECT.
+    If the user wants to save the human cropped image, give the tool TWO arguments in the order: image_path, True. Otherwise, give the tool TWO arguments in the order: image_path, False. Always follow this order when calling the tool.
+    This tool will return a string pointing to the path of a new image which is the result of segmentation and this path can be used to further process the segmented image."""
+
+    def _run(self, img_save):
+        img_path, save = img_save.strip("()").split(",")
+
+        # Initialize SegGPT model and image processor
+        model_id = "BAAI/seggpt-vit-large"
+        image_processor = SegGptImageProcessor.from_pretrained(model_id)
+        model = SegGptForImageSegmentation.from_pretrained(model_id)
+
+        # Load the specified image
+        image_input = Image.open(img_path)
+
+        # Load the dataset for semantic segmentation (assuming it's the same as before)
+        dataset_id = "mattmdjaga/human_parsing_dataset"
+        ds = load_dataset(dataset_id, split="train")
+
+        # Number of labels for the dataset
+        num_labels = 18
+
+        # Assuming you want to use the first image and mask prompts from the dataset
+        image_prompt = ds[0]["image"]
+        mask_prompt = ds[0]["mask"]
+
+        # Process the image and prompts
+        inputs = image_processor(
+            images=image_input,
+            prompt_images=image_prompt,
+            prompt_masks=mask_prompt,
+            num_labels=num_labels,
+            return_tensors="pt"
+        )
+
+        # Perform segmentation
+        with torch.no_grad():
+            outputs = model(**inputs)
+
+        # Post-process segmentation to get the mask
+        target_sizes = [image_input.size[::-1]]
+        mask = image_processor.post_process_semantic_segmentation(outputs, target_sizes, num_labels=num_labels)[0]
+
+        # Convert mask to numpy array
+        mask_array = mask.cpu().numpy()
+
+        # Apply the mask to the original image
+        image_np = np.array(image_input)
+        masked_image_np = np.copy(image_np)
+
+        # Set non-masked pixels to black
+        masked_image_np[mask_array == 0] = 0
+
+        # Convert numpy array back to PIL image
+        masked_image_pil = Image.fromarray(masked_image_np)
+
+        # Save or display the masked image
+        # masked_image_pil.show()
+        if save:
+            masked_image_pil.save("cropped_image.jpg")
+            return "cropped_image.jpg is the path of the new cropped image."
