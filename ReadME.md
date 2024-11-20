@@ -1,7 +1,7 @@
 
 # Team 4
 
-We are on `Github` now! The files we have developed for this Hackathon are stored, managed, tracked and updated through this repository.
+We are on `Github` now! The files we have developed for this Hackathon are stored, managed, tracked and updated through this repository
 
 ## Authors
 
